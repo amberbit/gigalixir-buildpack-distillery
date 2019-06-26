@@ -83,7 +83,7 @@ export_env_vars
 export_mix_env
 
 RELEASE_ENV=${MIX_ENV:-prod}
-DEFAULT_RELEASE_OPTIONS="--env ${RELEASE_ENV}"
+DEFAULT_RELEASE_OPTIONS=""
 RELEASE_OPTIONS=${GIGALIXIR_RELEASE_OPTIONS:-$DEFAULT_RELEASE_OPTIONS}
 
 cd $build_dir/$app_relative_path
