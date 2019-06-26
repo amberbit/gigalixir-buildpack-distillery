@@ -129,19 +129,29 @@ VERSION=`echo $DIRS | cut -d '/' -f 6`
 
 mkdir -p $cache_dir/out
 rm -f $cache_dir/out/*
-cp -r _build/${RELEASE_ENV}/rel/$APP $cache_dir/out/$APP-$VERSION
+cp _build/${RELEASE_ENV}/rel/$APP/releases/$VERSION/$APP.tar.gz $cache_dir/out/$APP-$VERSION.tar.gz
 
 # so it can be deleted outside of container
-chmod +w $cache_dir/out/$APP-$VERSION
+chmod +w $cache_dir/out/$APP-$VERSION.tar.gz
 
 # determine capabilities of this slug
 # can eval run Elixir?
 output_section "Determining release capabilities"
 set +o errexit    # do not exit if there is an error
 
-echo '{"distillery": {"eval": "elixir"}}' > $cache_dir/out/capabilities
-chmod +w $cache_dir/out/capabilities
+# this is a hack to get around an issue in distillery 2.0.13. in 2.0.13, if you run eval before running
+# anything else, you get an error.
+_build/${RELEASE_ENV}/rel/$APP/bin/$APP describe > /dev/null 2>&1
 
+RESULT=$(_build/${RELEASE_ENV}/rel/$APP/bin/$APP eval 'IO.inspect 123+123' 2>&1)
+if [ $? -eq 0 ]; then
+  if [ $RESULT -eq '246' ]; then
+    # success. write out capabilities file. # capabilities file is gigalixir-only, heroku ignores.
+    echo '{"distillery": {"eval": "elixir"}}' > $cache_dir/out/capabilities
+    # so it can be deleted outside of container
+    chmod +w $cache_dir/out/capabilities
+  fi
+fi
 set -o errexit    # always exit on error
 
 
